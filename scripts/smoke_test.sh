@@ -21,6 +21,7 @@ case "$method" in
 esac
 
 mkdir -p "$work_root"
+training_smoke_log="${CT_SMOKE_LOG:-$work_root/smoke.log}"
 exec > >(tee -a "$work_root/smoke.log") 2>&1
 cd "$repo_root"
 python tools/dataset/validate_coco10.py --data-root "$data_root/coco" --percent 10 --fold 1 --check-files
@@ -56,7 +57,7 @@ else
 fi
 test -f "$checkpoint"
 
-python - "$training_log_dir" "$method" "$work_root/smoke.log" <<'PY'
+python - "$training_log_dir" "$method" "$training_smoke_log" <<'PY'
 import re
 import sys
 import math

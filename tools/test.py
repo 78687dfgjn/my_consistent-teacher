@@ -14,6 +14,7 @@ from mmdet.apis import multi_gpu_test, single_gpu_test
 from mmdet.datasets import build_dataloader, build_dataset, replace_ImageToTensor
 from mmdet.models import build_detector
 
+from ssod.core.bbox.assigners import DynamicSoftLabelAssigner  # noqa: F401
 from ssod.utils import patch_config
 
 

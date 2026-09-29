@@ -5,6 +5,7 @@ import argparse
 import torch
 from mmcv import Config
 from mmdet.models import build_detector
+from ssod.core.bbox.assigners import DynamicSoftLabelAssigner  # noqa: F401
 from ssod.utils import patch_config
 
 
