@@ -210,6 +210,20 @@ iteration, so the 180,000-step run takes roughly 37 hours before validation
 overhead. Both jobs write periodic checkpoints and append logs under
 `/hy-tmp/consistent-teacher/`.
 
+To run the two adapted experiments sequentially, evaluate each final
+checkpoint, and retry a failed training stage from `latest.pth`, start the
+sequence supervisor:
+
+```bash
+tmux new -d -s reproduction_sequence \
+  'cd /hy-tmp/consistent-teacher/repo && bash scripts/run_reproduction_sequence_1gpu.sh'
+```
+
+The supervisor detects an already-running Mean-Teacher session, then waits for
+its 180,000-step checkpoint before evaluation and Consistent-Teacher training.
+Its progress is logged to
+`/hy-tmp/consistent-teacher/logs/reproduction_sequence_1gpu.log`.
+
 ## Evaluation
 
 Evaluate the final teacher model using the matching reproduction config:
