@@ -220,8 +220,9 @@ interrupted twice on request; the latest restart resumed from the step-12,000
 checkpoint. The restarted log recorded non-finite gradient norms at steps
 12,150, 14,350, 14,550, 18,100 and 18,200 while loss remained finite; sampled
 norms recovered after each event. At the latest verified poll it had reached
-step 18,850, with loss 2.24540, gradient norm 11.80019 and 0.72719 seconds per
-iteration. The step-16,000 checkpoint audit passed. The AMP resume verifier was
+step 20,000, with loss 2.26091, gradient norm 11.49171 and 0.76868 seconds per
+iteration. The step-16,000 and step-20,000 checkpoint audits passed; the latter
+reported `meta.iter=19999`, AMP scale 8192 and growth tracker 1845. The AMP resume verifier was
 exercised against that checkpoint: it accepted a trace with the saved
 scale/tracker and rejected a deliberately mismatched scale. This is a verifier
 logic check; a fresh Consistent-Teacher smoke resume must still pass before its
