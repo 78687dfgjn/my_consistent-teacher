@@ -217,8 +217,8 @@ evaluation and the full Consistent-Teacher run. The Mean-Teacher job has been
 interrupted twice on request; the last complete checkpoint is step 12,000, and
 the run resumed from that checkpoint. The restarted log recorded a non-finite
 gradient norms at steps 12,150, 14,350 and 14,550 while loss remained finite;
-norms recovered after the first two events at steps 12,200 and 14,400. The run
-is still advancing.
+sampled norms recovered at steps 12,200, 14,400 and 14,600, then remained finite
+through the latest poll at step 17,450. The 16,000-step checkpoint audit passed.
 The trainer estimated about 1 day 14 hours remained at step 13,700. Both jobs write periodic checkpoints and
 append logs under `/hy-tmp/consistent-teacher/`.
 
