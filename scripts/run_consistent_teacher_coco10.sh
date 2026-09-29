@@ -56,6 +56,8 @@ cd "$repo_root"
 if [[ "$mode" == paper ]]; then
   bash tools/dist_train.sh "$config" "$gpus" --work-dir "$run_dir" --seed 1 "${resume_args[@]}"
 else
+  export CT_ALGORITHM_TRACE_FILE="$run_dir/algorithm_trace.log"
+  export CT_GMM_THRESHOLD_TRACE_FILE="$run_dir/gmm_thresholds.csv"
   CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}" \
-    python tools/train.py "$config" --work-dir "$run_dir" --seed 1 "${resume_args[@]}"
+    python scripts/train_with_algorithm_trace.py "$config" --work-dir "$run_dir" --seed 1 "${resume_args[@]}"
 fi

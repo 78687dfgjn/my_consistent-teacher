@@ -226,6 +226,19 @@ otherwise it pauses after logging the measured result so the baseline can be
 diagnosed first. Its progress is logged to
 `/hy-tmp/consistent-teacher/logs/reproduction_sequence_1gpu.log`.
 
+The one-GPU Consistent-Teacher runner wraps the unmodified training entrypoint
+with `scripts/train_with_algorithm_trace.py`. The wrapper counts calls to
+`FAM3DHead.forward`, `DynamicSoftLabelAssigner.assign`, and `gmm_policy` without
+changing their return values. It appends totals to
+`<run_dir>/algorithm_trace.log` when each training process exits. It also
+records the class-wise threshold returned by the real `gmm_policy` call at
+each 1,000-step boundary where that class has teacher predictions, in
+`<run_dir>/gmm_thresholds.csv` (`iteration,class_id,threshold,queue_scores`).
+Set `CT_GMM_THRESHOLD_TRACE_INTERVAL` to change the sampling interval. Inspect
+this CSV after training to verify that thresholds were updated for multiple
+classes over time; the 400-step smoke trace separately verifies that ASA,
+FAM-3D, and GMM are reached during a short run.
+
 ## Evaluation
 
 Evaluate the final teacher model using the matching reproduction config:
