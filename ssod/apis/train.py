@@ -168,7 +168,16 @@ def train_detector(
         eval_cfg["by_epoch"] = eval_cfg.get(
             "by_epoch", cfg.runner["type"] != "IterBasedRunner"
         )
-        if "type" not in eval_cfg:
+        eval_type = eval_cfg.get("type")
+        if eval_type == "EvalHook":
+            # MMDetection 2.x exposes EvalHook as a class but does not add it
+            # to MMCV's HOOKS registry.  Official configs can still name it
+            # explicitly, so instantiate it directly instead of asking
+            # build_from_cfg to resolve an unregistered class.
+            eval_hook_cfg = eval_cfg.copy()
+            eval_hook_cfg.pop("type")
+            eval_hook = EvalHook(val_dataloader, **eval_hook_cfg)
+        elif "type" not in eval_cfg:
             eval_hook = DistEvalHook if distributed else EvalHook
             eval_hook = eval_hook(val_dataloader, **eval_cfg)
 

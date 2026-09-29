@@ -201,7 +201,13 @@ def main():
     )
 
     # build the model and load checkpoint
-    cfg.model.train_cfg = None
+    if cfg.model.get("type") == "ConsistentTeacher":
+        # ConsistentTeacher needs wrapper train_cfg.num_scores to size its GMM
+        # score buffer even when instantiated for evaluation. Clear only the
+        # child detector's assignment config, as this path does not train it.
+        cfg.model.model.train_cfg = None
+    else:
+        cfg.model.train_cfg = None
     model = build_detector(cfg.model, test_cfg=cfg.get("test_cfg"))
     fp16_cfg = cfg.get("fp16", None)
     if fp16_cfg is not None:
