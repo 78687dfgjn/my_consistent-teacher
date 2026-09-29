@@ -46,11 +46,11 @@ df -h "$run_root"
 printf '%s\n' "$$" > "$log_file.pid"
 
 resume_args=()
-if [[ -n "${CT_RESUME_FROM:-}" ]]; then
+if [[ -f "$run_dir/latest.pth" ]]; then
+  resume_args=(--resume-from "$run_dir/latest.pth")
+elif [[ -n "${CT_RESUME_FROM:-}" ]]; then
   if [[ ! -f "$CT_RESUME_FROM" ]]; then echo "Resume checkpoint not found: $CT_RESUME_FROM" >&2; exit 2; fi
   resume_args=(--resume-from "$CT_RESUME_FROM")
-elif [[ -f "$run_dir/latest.pth" ]]; then
-  resume_args=(--resume-from "$run_dir/latest.pth")
 fi
 cd "$repo_root"
 if [[ "$mode" == paper ]]; then
