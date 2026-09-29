@@ -243,3 +243,16 @@ Both configs set inference to the teacher. Keep the raw evaluation log,
 prediction pickle, checkpoint, and metric output under `/hy-tmp`; do not add
 them to Git. Enter the verified AP50:95 values and exact checkpoint paths in
 `RESULTS.md`.
+
+To check that a saved Mean-Teacher checkpoint produces pseudo boxes on
+unlabeled weak views using the configured threshold, run:
+
+```bash
+python tools/diagnose_pseudo_labels.py \
+  configs/reproduction/mean_teacher_r50_fpn_coco_180k_10p_1gpu.py \
+  /hy-tmp/consistent-teacher/runs/mean_teacher_coco10_1gpu/iter_8000.pth \
+  --num-images 64 \
+  --output /hy-tmp/consistent-teacher/runs/diagnostics/mean_teacher_iter8000.json
+```
+
+This diagnostic does not modify the model, threshold, or checkpoint.
