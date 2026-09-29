@@ -2,6 +2,7 @@
 """Check teacher/student storage and state divergence in a saved checkpoint."""
 
 import argparse
+import pprint
 import torch
 from mmcv import Config
 from mmdet.models import build_detector
@@ -30,6 +31,15 @@ def main():
         raise SystemExit(f"teacher/student share parameter storage: {shared[:3]}")
 
     checkpoint = torch.load(args.checkpoint, map_location="cpu")
+    meta = checkpoint.get("meta", {}) if isinstance(checkpoint, dict) else {}
+    fp16_meta = meta.get("fp16", {}) if isinstance(meta, dict) else {}
+    scaler_state = fp16_meta.get("loss_scaler") if isinstance(fp16_meta, dict) else None
+    print(
+        "checkpoint runtime metadata: "
+        f"iter={meta.get('iter') if isinstance(meta, dict) else None}, "
+        f"epoch={meta.get('epoch') if isinstance(meta, dict) else None}, "
+        f"loss_scaler={pprint.pformat(scaler_state)}"
+    )
     state = checkpoint.get("state_dict", checkpoint)
     nonfinite = [
         name
