@@ -8,6 +8,10 @@
 
 This repository contains the offical implementation for our CVPR-2023 paper. 
 
+For paper-first reproduction configs, split validation, hardware-adapted
+commands, and run records, see [REPRODUCTION.md](REPRODUCTION.md),
+[REPRODUCTION_DEVIATIONS.md](REPRODUCTION_DEVIATIONS.md), and [RESULTS.md](RESULTS.md).
+
 ✨We are now able to train detector on 10% MS-COCO to 40 mAP✨
 
 **Consistent-Teacher: Towards Reducing Inconsistent Pseudo-targets in Semi-supervised Object Detection**

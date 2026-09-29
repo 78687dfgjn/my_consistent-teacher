@@ -1,0 +1,13 @@
+# Core versions validated on the provided server.
+torch==1.9.0+cu111
+torchvision==0.10.0+cu111
+mmcv-full==1.7.1
+yapf==0.32.0
+numpy==1.22.3
+opencv-contrib-python==4.5.5.64
+wandb==0.10.31
+scikit-learn==1.0.2
+prettytable==3.11.0
+
+# MMDetection 2.28.1 is installed from its source checkout; the project is
+# installed editable from this repository. See environment/install_paper_env.sh.

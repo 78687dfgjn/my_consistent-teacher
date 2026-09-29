@@ -6,3 +6,9 @@ work_dirs/
 *.pth
 *.zip
 *.part[0-9][0-9]
+*.pth.tar
+*.pkl
+*.log
+*.log.json
+wandb/
+tmp/

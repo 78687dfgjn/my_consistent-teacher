@@ -247,6 +247,8 @@ def main():
                 "gpu_collect",
                 "save_best",
                 "rule",
+                "evaluated_modules",
+                "key_indicator",
             ]:
                 eval_kwargs.pop(key, None)
             eval_kwargs.update(dict(metric=args.eval, **kwargs))

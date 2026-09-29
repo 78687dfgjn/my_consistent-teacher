@@ -30,5 +30,5 @@ ln -sfn "$data_root" "$repo_root/data"
 
 cd "$repo_root"
 exec python tools/train.py \
-  configs/baseline/mean_teacher_retinanet_r50_fpn_coco_180k_10p_1gpu.py \
+  configs/reproduction/mean_teacher_r50_fpn_coco_180k_10p_1gpu.py \
   --work-dir "$work_dir" --seed 1
