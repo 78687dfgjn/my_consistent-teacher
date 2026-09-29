@@ -216,13 +216,17 @@ exact eight-GPU reproduction.
 
 On the verified one-RTX-2080-Ti host, Mean-Teacher runs first, followed by
 evaluation and the full Consistent-Teacher run. The Mean-Teacher job has been
-interrupted twice on request; the last complete checkpoint is step 12,000, and
-the run resumed from that checkpoint. The restarted log recorded a non-finite
-gradient norms at steps 12,150, 14,350, 14,550, 18,100 and 18,200 while loss
-remained finite; sampled norms recovered after each event, with the latest poll
-at step 18,650 finite. The 16,000-step checkpoint audit passed.
-The trainer estimated about 1 day 14 hours remained at step 13,700. Both jobs write periodic checkpoints and
-append logs under `/hy-tmp/consistent-teacher/`.
+interrupted twice on request; the latest restart resumed from the step-12,000
+checkpoint. The restarted log recorded non-finite gradient norms at steps
+12,150, 14,350, 14,550, 18,100 and 18,200 while loss remained finite; sampled
+norms recovered after each event. At the latest verified poll it had reached
+step 18,850, with loss 2.24540, gradient norm 11.80019 and 0.72719 seconds per
+iteration. The step-16,000 checkpoint audit passed. The AMP resume verifier was
+exercised against that checkpoint: it accepted a trace with the saved
+scale/tracker and rejected a deliberately mismatched scale. This is a verifier
+logic check; a fresh Consistent-Teacher smoke resume must still pass before its
+full run. Both jobs write periodic checkpoints and append logs under
+`/hy-tmp/consistent-teacher/`.
 
 To run the two adapted experiments sequentially, evaluate each final
 checkpoint, and retry a failed training stage from `latest.pth`, start the
