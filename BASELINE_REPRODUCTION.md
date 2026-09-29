@@ -40,7 +40,9 @@ python tools/dataset/semi_coco.py --percent 10 --seed 1 \
 ## Environment and training
 
 The tested server has PyTorch 1.9.0+cu111, torchvision 0.10.0+cu111,
-MMCV Full 1.7.1, MMDetection 2.28.1, Python 3.8, and one RTX 2080 Ti.
+MMCV Full 1.7.1, MMDetection 2.28.1, YAPF 0.32.0, Python 3.8, and one
+RTX 2080 Ti. Newer YAPF releases remove the `verify` argument used by
+this MMCV release.
 Because the server's editable installs are not visible on its system
 Python path, the launcher adds both source directories to `PYTHONPATH`.
 
