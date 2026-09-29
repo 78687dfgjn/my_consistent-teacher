@@ -45,6 +45,12 @@ def main():
     cfg = Config.fromfile(args.config)
     if cfg.get("custom_imports"):
         import_modules_from_strings(**cfg.custom_imports)
+    if cfg.get("work_dir") is None:
+        cfg.work_dir = (
+            os.path.dirname(os.path.abspath(args.output))
+            if args.output
+            else os.path.abspath("./work_dirs/pseudo_label_diagnostic")
+        )
     cfg = patch_config(cfg)
     if cfg.model.get("type") != "SingleStageMeanTeacher":
         raise ValueError(
