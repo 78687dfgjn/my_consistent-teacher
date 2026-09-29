@@ -216,9 +216,9 @@ On the verified one-RTX-2080-Ti host, Mean-Teacher runs first, followed by
 evaluation and the full Consistent-Teacher run. The Mean-Teacher job has been
 interrupted twice on request; the last complete checkpoint is step 12,000, and
 the run resumed from that checkpoint. The restarted log recorded a non-finite
-gradient norm at step 12,150 while loss remained finite; subsequent logged
-gradient norms recovered and training advanced through step 14,000. The trainer
-estimated about 1 day 14 hours remained at step 13,700. Both jobs write periodic checkpoints and
+gradient norms at steps 12,150 and 14,350 while loss remained finite; norms
+recovered after the first event through step 14,300. The run is still advancing.
+The trainer estimated about 1 day 14 hours remained at step 13,700. Both jobs write periodic checkpoints and
 append logs under `/hy-tmp/consistent-teacher/`.
 
 To run the two adapted experiments sequentially, evaluate each final
