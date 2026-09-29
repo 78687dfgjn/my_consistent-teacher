@@ -21,8 +21,9 @@ case "$method" in
 esac
 
 mkdir -p "$work_root"
+export CT_AMP_TRACE_FILE="$work_root/train/amp_optimizer_trace.log"
 training_smoke_log="${CT_SMOKE_LOG:-$work_root/smoke.log}"
-exec > >(tee -a "$work_root/smoke.log") 2>&1
+exec > >(tee -a "$training_smoke_log") 2>&1
 cd "$repo_root"
 python tools/dataset/validate_coco10.py --data-root "$data_root/coco" --percent 10 --fold 1 --check-files
 python scripts/verify_batch_ratio.py "$config"
@@ -48,23 +49,25 @@ else
       --work-dir "$work_root/train" --seed 1 --no-validate \
       --cfg-options "${smoke_options[@]}"
   else
-    python tools/train.py "$config" \
+    python scripts/train_with_amp_trace.py "$config" \
       --work-dir "$work_root/train" --seed 1 --no-validate \
       --cfg-options "${smoke_options[@]}"
   fi
   checkpoint="$work_root/train/latest.pth"
   training_log_dir="$work_root/train"
+  trained_here=1
 fi
+trained_here="${trained_here:-0}"
 test -f "$checkpoint"
 
-python - "$training_log_dir" "$method" "$training_smoke_log" <<'PY'
+python - "$training_log_dir" "$method" "$trained_here" <<'PY'
 import re
 import sys
 import math
 from pathlib import Path
 
 log_dir = Path(sys.argv[1])
-smoke_log = Path(sys.argv[3])
+trained_here = sys.argv[3] == "1"
 logs = list(log_dir.glob("*.log"))
 if not logs:
     raise SystemExit("training log not found")
@@ -82,17 +85,32 @@ bad_norm_steps = [int(step) for step, value in norms if not math.isfinite(float(
 finite_norms = [step for step, value in norms if math.isfinite(float(value))]
 if not finite_norms:
     raise SystemExit("no finite gradient norm was logged")
-overflow_count = smoke_log.read_text(errors="replace").count("Non-finite norm encountered")
-overflow_budget = max(1, int(400 * 0.05))
-if overflow_count > overflow_budget:
-    raise SystemExit(
-        f"dynamic FP16 skipped too many optimizer updates: {overflow_count} > {overflow_budget}"
+if trained_here:
+    trace_file = log_dir / "amp_optimizer_trace.log"
+    trace_text = trace_file.read_text(errors="replace") if trace_file.exists() else ""
+    trace = re.search(
+        r"AMP_OPTIMIZER_TRACE scaler_steps=(\d+) applied=(\d+) skipped=(\d+) unknown=(\d+)",
+        trace_text,
     )
-if bad_norm_steps or overflow_count:
+    if not trace:
+        raise SystemExit("GradScaler optimizer-step trace missing")
+    scaler_steps, applied, skipped, unknown = map(int, trace.groups())
+    if scaler_steps != 400 or applied + skipped + unknown != scaler_steps:
+        raise SystemExit(f"invalid GradScaler trace totals: {trace.group(0)}")
+    if unknown:
+        raise SystemExit(f"GradScaler trace could not classify {unknown} updates")
+    skip_budget = max(1, int(scaler_steps * 0.05))
+    if skipped > skip_budget:
+        raise SystemExit(
+            f"dynamic FP16 skipped {skipped}/{scaler_steps} optimizer updates; "
+            f"budget is {skip_budget}"
+        )
     print(
-        f"dynamic FP16 had {overflow_count}/400 non-finite gradient-norm updates; "
-        f"logged non-finite windows={bad_norm_steps}; finite norms recovered"
+        f"GradScaler updates: applied={applied}, skipped={skipped}, "
+        f"total={scaler_steps}, logged non-finite gradient norms={bad_norm_steps}"
     )
+elif bad_norm_steps:
+    print(f"logged non-finite gradient norms in validation-only invocation: {bad_norm_steps}")
 if "ema_momentum" not in text:
     raise SystemExit("EMA hook did not report a momentum update")
 count_key = "unsup_num_gts"

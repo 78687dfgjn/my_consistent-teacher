@@ -45,6 +45,11 @@ nvidia-smi
 df -h "$run_root"
 printf '%s\n' "$$" > "$log_file.pid"
 
+if [[ "$mode" == "1gpu" && "${CT_SKIP_SMOKE_GATE:-0}" != "1" ]]; then
+  echo "$(date -Is) running the 400-step Consistent-Teacher smoke gate before full training"
+  bash "$repo_root/scripts/smoke_test.sh" consistent_teacher
+fi
+
 resume_args=()
 if [[ -f "$run_dir/latest.pth" ]]; then
   resume_args=(--resume-from "$run_dir/latest.pth")
@@ -58,6 +63,7 @@ if [[ "$mode" == paper ]]; then
 else
   export CT_ALGORITHM_TRACE_FILE="$run_dir/algorithm_trace.log"
   export CT_GMM_THRESHOLD_TRACE_FILE="$run_dir/gmm_thresholds.csv"
+  export CT_AMP_TRACE_FILE="$run_dir/amp_optimizer_trace.log"
   CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}" \
     python scripts/train_with_algorithm_trace.py "$config" --work-dir "$run_dir" --seed 1 "${resume_args[@]}"
 fi

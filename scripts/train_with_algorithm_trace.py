@@ -9,6 +9,7 @@ import sys
 import atexit
 from pathlib import Path
 
+from amp_optimizer_trace import install_amp_optimizer_trace
 from ssod.core.bbox.assigners.dynamic_assigner import DynamicSoftLabelAssigner
 from ssod.models.consistent_teacher import ConsistentTeacher
 from ssod.models.dense_heads.fam3d import FAM3DHead
@@ -90,6 +91,7 @@ def write_algorithm_trace():
 
 
 def main():
+    install_amp_optimizer_trace()
     FAM3DHead.forward = traced_fam3d_forward
     DynamicSoftLabelAssigner.assign = traced_dynamic_assign
     ConsistentTeacher.gmm_policy = traced_gmm_policy

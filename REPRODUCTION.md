@@ -164,10 +164,12 @@ scripts/smoke_test.sh consistent_teacher
 Each smoke run performs 400 optimization iterations and checks finite logged
 losses, recovered finite gradients, finite checkpoint tensors, EMA logging,
 positive pseudo-box counts, checkpoint writing, resume for one iteration,
-and a `val2017` bbox evaluation. For the hardware-adapted dynamic FP16 runs,
-the checker permits at most 5% scaler-detected skipped updates and records the
-count; the eight-GPU paper configs are not changed. The
-Consistent-Teacher smoke also counts live calls to FAM3DHead, the dynamic
+and a `val2017` bbox evaluation. For dynamic FP16 runs, a lightweight
+`GradScaler` trace reads PyTorch's per-optimizer `found_inf` decision before
+each scaler step and counts updates actually skipped; the gate allows at most
+5% skipped updates. A gradient-clipping warning is not treated as a skip
+count. The eight-GPU paper configs are not changed. The Consistent-Teacher
+smoke also counts live calls to FAM3DHead, the dynamic
 assigner, and GMM policy, and requires at least two distinct `gmm_thr` values
 before its full run.
 
@@ -213,8 +215,9 @@ exact eight-GPU reproduction.
 On the verified one-RTX-2080-Ti host, Mean-Teacher runs first, followed by
 evaluation and the full Consistent-Teacher run. The Mean-Teacher job has been
 interrupted twice on request; the last complete checkpoint is step 12,000, and
-the JSON log records finite loss and gradient norm through step 12,600. The
-sequence supervisor resumes from that checkpoint. Observed throughput is
+the run resumed from that checkpoint. The restarted log recorded a non-finite
+gradient norm at step 12,150 while loss remained finite; subsequent logged
+gradient norms recovered and training advanced through step 13,350. Observed throughput is
 about 0.72 seconds per iteration, so 180,000 total updates take roughly 37
 hours before validation overhead. Both jobs write periodic checkpoints and
 append logs under `/hy-tmp/consistent-teacher/`.
@@ -245,10 +248,12 @@ tmux new -d -s reproduction_sequence \
   'cd /hy-tmp/consistent-teacher/repo && CT_MT_RUN_DIR=/hy-tmp/consistent-teacher/runs/mean_teacher_coco10_1gpu_restart CT_MT_RESUME_FROM=/hy-tmp/consistent-teacher/runs/mean_teacher_coco10_1gpu_restart/iter_12000.pth bash scripts/run_reproduction_sequence_1gpu.sh'
 ```
 
-The one-GPU Consistent-Teacher runner wraps the unmodified training entrypoint
-with `scripts/train_with_algorithm_trace.py`. The wrapper counts calls to
+The one-GPU Consistent-Teacher runner first executes the 400-step smoke gate,
+then wraps the unmodified training entrypoint with
+`scripts/train_with_algorithm_trace.py`. The wrapper counts calls to
 `FAM3DHead.forward`, `DynamicSoftLabelAssigner.assign`, and `gmm_policy` without
-changing their return values. It appends totals to
+changing their return values, and records actual AMP skipped updates to
+`amp_optimizer_trace.log`. It appends totals to
 `<run_dir>/algorithm_trace.log` when each training process exits. It also
 records the class-wise threshold returned by the real `gmm_policy` call at
 each 1,000-step boundary where that class has teacher predictions, in
