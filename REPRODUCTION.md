@@ -220,8 +220,10 @@ tmux new -d -s reproduction_sequence \
 ```
 
 The supervisor detects an already-running Mean-Teacher session, then waits for
-its 180,000-step checkpoint before evaluation and Consistent-Teacher training.
-Its progress is logged to
+its 180,000-step checkpoint before evaluation. It starts Consistent-Teacher
+only when the final Mean-Teacher AP is within one point of the paper's 35.5;
+otherwise it pauses after logging the measured result so the baseline can be
+diagnosed first. Its progress is logged to
 `/hy-tmp/consistent-teacher/logs/reproduction_sequence_1gpu.log`.
 
 ## Evaluation
