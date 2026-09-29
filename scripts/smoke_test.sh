@@ -43,6 +43,7 @@ if [[ -n "${CT_SMOKE_CHECKPOINT:-}" ]]; then
   checkpoint="$CT_SMOKE_CHECKPOINT"
   training_log_dir="${CT_SMOKE_TRAIN_LOG_DIR:-$(dirname "$checkpoint")}"
 else
+  export CT_AMP_TRACE_PHASE=fresh
   if [[ "$method" == consistent_teacher ]]; then
     export CT_ALGORITHM_TRACE_FILE="$work_root/train/algorithm_trace.txt"
     python scripts/train_with_algorithm_trace.py "$config" \
@@ -132,18 +133,33 @@ if sys.argv[2] == "consistent_teacher":
 print("smoke log checks passed: finite losses, EMA logged, pseudo boxes logged")
 PY
 
-# Resume the just-saved checkpoint for one iteration. MMDetection logs the
-# loaded zero-based index as 399/400 after the 400-step checkpoint; the runner
-# then writes the 401-iteration checkpoint to prove one resumed update ran.
-python tools/train.py "$config" \
-  --work-dir "$work_root/resume" --seed 1 --no-validate \
-  --resume-from "$checkpoint" \
-  --cfg-options "${resume_options[@]}"
+# Resume the just-saved checkpoint for one iteration. The wrapper records the
+# scaler state inside Fp16OptimizerHook.before_run so resume restoration is
+# checked before the next optimizer update.
+if [[ "$trained_here" == "1" ]]; then
+  export CT_AMP_TRACE_PHASE=resume
+fi
+if [[ "$method" == "consistent_teacher" ]]; then
+  python scripts/train_with_algorithm_trace.py "$config" \
+    --work-dir "$work_root/resume" --seed 1 --no-validate \
+    --resume-from "$checkpoint" \
+    --cfg-options "${resume_options[@]}"
+else
+  python scripts/train_with_amp_trace.py "$config" \
+    --work-dir "$work_root/resume" --seed 1 --no-validate \
+    --resume-from "$checkpoint" \
+    --cfg-options "${resume_options[@]}"
+fi
 
 resume_log="$(find "$work_root/resume" -maxdepth 1 -name '*.log' -type f | head -n 1)"
 grep -Eq 'resumed from epoch: [0-9]+, iter (399|400)' "$resume_log"
 test -f "$work_root/resume/iter_401.pth"
 grep -q 'Saving checkpoint at 401 iteration' "$resume_log"
+
+if [[ "$trained_here" == "1" ]]; then
+  python scripts/verify_amp_resume_state.py \
+    "$checkpoint" "$work_root/train/amp_optimizer_trace.log"
+fi
 
 python scripts/verify_checkpoint.py "$config" "$checkpoint"
 

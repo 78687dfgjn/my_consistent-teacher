@@ -167,8 +167,10 @@ positive pseudo-box counts, checkpoint writing, resume for one iteration,
 and a `val2017` bbox evaluation. For dynamic FP16 runs, a lightweight
 `GradScaler` trace reads PyTorch's per-optimizer `found_inf` decision before
 each scaler step and counts updates actually skipped; the gate allows at most
-5% skipped updates. A gradient-clipping warning is not treated as a skip
-count. The eight-GPU paper configs are not changed. The Consistent-Teacher
+5% skipped updates. During the resume check, the trace records the scaler
+state loaded by MMCV's `Fp16OptimizerHook.before_run`; the smoke compares it
+with the saved checkpoint before accepting resume. A gradient-clipping warning
+is not treated as a skip count. The eight-GPU paper configs are not changed. The Consistent-Teacher
 smoke also counts live calls to FAM3DHead, the dynamic
 assigner, and GMM policy, and requires at least two distinct `gmm_thr` values
 before its full run.
