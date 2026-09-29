@@ -226,6 +226,16 @@ otherwise it pauses after logging the measured result so the baseline can be
 diagnosed first. Its progress is logged to
 `/hy-tmp/consistent-teacher/logs/reproduction_sequence_1gpu.log`.
 
+To resume the interrupted Mean-Teacher run from its last audited checkpoint
+in a separate output directory, pass the per-stage directory and checkpoint to
+the supervisor. On a later automatic retry, the runner prefers that directory's
+newest `latest.pth` over the original resume path:
+
+```bash
+tmux new -d -s reproduction_sequence \
+  'cd /hy-tmp/consistent-teacher/repo && CT_MT_RUN_DIR=/hy-tmp/consistent-teacher/runs/mean_teacher_coco10_1gpu_restart CT_MT_RESUME_FROM=/hy-tmp/consistent-teacher/runs/mean_teacher_coco10_1gpu/iter_8000.pth bash scripts/run_reproduction_sequence_1gpu.sh'
+```
+
 The one-GPU Consistent-Teacher runner wraps the unmodified training entrypoint
 with `scripts/train_with_algorithm_trace.py`. The wrapper counts calls to
 `FAM3DHead.forward`, `DynamicSoftLabelAssigner.assign`, and `gmm_policy` without
