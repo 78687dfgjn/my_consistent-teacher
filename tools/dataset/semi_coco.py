@@ -25,7 +25,7 @@ import json
 import os
 
 
-def prepare_coco_data(seed=1, percent=10.0, version=2017, seed_offset=0):
+def prepare_coco_data(seed=1, percent=10.0, version=2017, seed_offset=0, partial_only=False):
     """Prepare COCO dataset for Semi-supervised learning
     Args:
       seed: random seed for dataset split
@@ -107,7 +107,7 @@ def prepare_coco_data(seed=1, percent=10.0, version=2017, seed_offset=0):
     _save_anno(save_name, unlabeled_images, unlabeled_annotations)
     #construct 120k unlabeled data
     unlabeled_ann_file = os.path.join(SAVE_DIR, "instances_unlabeled{}.json".format(version))
-    if not os.path.exists(unlabeled_ann_file):
+    if not partial_only and not os.path.exists(unlabeled_ann_file):
         unlabeled_info = json.load(
             open(os.path.join(COCOANNODIR, "image_info_unlabeled{}.json".format(version)))
         )
@@ -125,8 +125,11 @@ if __name__ == "__main__":
     parser.add_argument("--version", type=int, default=2017)
     parser.add_argument("--seed", type=int, help="seed", default=1)
     parser.add_argument("--seed-offset", type=int, default=0)
+    parser.add_argument("--partial-only", action="store_true",
+                        help="Generate a train2017 split without requiring unlabeled2017 metadata")
     args = parser.parse_args()
     print(args)
     DATA_DIR = args.data_dir
     SAVE_DIR = args.save_dir
-    prepare_coco_data(args.seed, args.percent, args.version, args.seed_offset)
+    prepare_coco_data(args.seed, args.percent, args.version,
+                      args.seed_offset, args.partial_only)
