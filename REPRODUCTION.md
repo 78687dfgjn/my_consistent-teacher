@@ -30,6 +30,13 @@ README recommends PyTorch 1.9.0 with either MMDetection 2.25.0/MMCV 1.3.9 or
 MMDetection 2.28.1/MMCV 1.7.1; this reproduction uses the latter pair. Do not
 install MMDetection 3.x for these MMDetection 2.x configs.
 
+On the provided server, `conda env list` reports a base environment at
+`/usr/local/miniconda3`, but its Python 3.9 interpreter does not contain the
+training packages. The validated run uses the host Python at `/usr/bin/python`
+(Python 3.8.10); `scripts/` sets `PYTHONPATH` to the adjacent MMDetection and
+Consistent-Teacher source trees. Check `command -v python` and import versions
+before changing this arrangement.
+
 For a clean Linux machine, create a Python 3.8 environment and install the
 matching CUDA 11.1 PyTorch wheels, then install `mmcv-full==1.7.1` from the
 official MMCV wheel index for `cu111/torch1.9.0`, check out MMDetection v2.28.1,
@@ -203,12 +210,14 @@ The single-GPU setup must only be reported with its actual GPU count, batch,
 precision, learning rate, iterations, and deviations. Do not compare it as an
 exact eight-GPU reproduction.
 
-On the verified one-RTX-2080-Ti host, the Mean-Teacher run is currently
-scheduled first, followed by evaluation and the full Consistent-Teacher run.
-The observed early Mean-Teacher throughput was about 0.71 seconds per
-iteration, so the 180,000-step run takes roughly 37 hours before validation
-overhead. Both jobs write periodic checkpoints and append logs under
-`/hy-tmp/consistent-teacher/`.
+On the verified one-RTX-2080-Ti host, Mean-Teacher runs first, followed by
+evaluation and the full Consistent-Teacher run. The Mean-Teacher job has been
+interrupted twice on request; the last complete checkpoint is step 12,000, and
+the JSON log records finite loss and gradient norm through step 12,600. The
+sequence supervisor resumes from that checkpoint. Observed throughput is
+about 0.72 seconds per iteration, so 180,000 total updates take roughly 37
+hours before validation overhead. Both jobs write periodic checkpoints and
+append logs under `/hy-tmp/consistent-teacher/`.
 
 To run the two adapted experiments sequentially, evaluate each final
 checkpoint, and retry a failed training stage from `latest.pth`, start the
@@ -233,7 +242,7 @@ newest `latest.pth` over the original resume path:
 
 ```bash
 tmux new -d -s reproduction_sequence \
-  'cd /hy-tmp/consistent-teacher/repo && CT_MT_RUN_DIR=/hy-tmp/consistent-teacher/runs/mean_teacher_coco10_1gpu_restart CT_MT_RESUME_FROM=/hy-tmp/consistent-teacher/runs/mean_teacher_coco10_1gpu/iter_8000.pth bash scripts/run_reproduction_sequence_1gpu.sh'
+  'cd /hy-tmp/consistent-teacher/repo && CT_MT_RUN_DIR=/hy-tmp/consistent-teacher/runs/mean_teacher_coco10_1gpu_restart CT_MT_RESUME_FROM=/hy-tmp/consistent-teacher/runs/mean_teacher_coco10_1gpu_restart/iter_12000.pth bash scripts/run_reproduction_sequence_1gpu.sh'
 ```
 
 The one-GPU Consistent-Teacher runner wraps the unmodified training entrypoint
