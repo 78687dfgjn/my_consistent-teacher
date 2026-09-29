@@ -58,5 +58,11 @@ evaluation = dict(save_best="bbox_mAP", rule="greater")
 # `fp16={}` behavior (MMCV Fp16OptimizerHook defaults) as code-sourced detail.
 fp16 = dict()
 
+# Keep only the newest two periodic checkpoints. The published baseline
+# config retains 20, which would exhaust the server's 50 GB temporary volume
+# before this run and Consistent-Teacher can both finish. Best-checkpoint
+# retention is managed by EvalHook separately.
+checkpoint_config = dict(interval=4000, max_keep_ckpts=2)
+
 # Avoid requiring external W&B credentials for a reproducible local run.
 log_config = dict(interval=50, hooks=[dict(type="TextLoggerHook", by_epoch=False)])

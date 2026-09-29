@@ -4,11 +4,16 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 run_root="${CT_RUN_ROOT:-/hy-tmp/consistent-teacher/runs}"
 log_root="${CT_LOG_ROOT:-/hy-tmp/consistent-teacher/logs}"
+mt_run_dir="${CT_MT_RUN_DIR:-$run_root/mean_teacher_coco10_1gpu}"
+ct_run_dir="${CT_CT_RUN_DIR:-$run_root/consistent_teacher_coco10_1gpu}"
+mt_resume_from="${CT_MT_RESUME_FROM:-}"
+ct_resume_from="${CT_CT_RESUME_FROM:-}"
 mkdir -p "$run_root" "$log_root"
 exec > >(tee -a "$log_root/reproduction_sequence_1gpu.log") 2>&1
 
 wait_for_final_checkpoint() {
-    local session="$1" runner="$2" checkpoint="$3" attempt
+    local session="$1" runner="$2" run_dir="$3" resume_from="$4" attempt
+    local checkpoint="$run_dir/iter_180000.pth" launch_env
     for attempt in 1 2 3; do
         if [[ -f "$checkpoint" ]]; then
             echo "$(date -Is) final checkpoint ready: $checkpoint"
@@ -16,8 +21,10 @@ wait_for_final_checkpoint() {
         fi
         if ! tmux has-session -t "$session" 2>/dev/null; then
             echo "$(date -Is) launching/resuming $runner (attempt $attempt)"
+            launch_env="CT_RUN_DIR='$run_dir'"
+            [[ -n "$resume_from" ]] && launch_env+=" CT_RESUME_FROM='$resume_from'"
             tmux new-session -d -s "$session" \
-                "cd '$repo_root' && bash '$repo_root/scripts/$runner' 1gpu"
+                "cd '$repo_root' && $launch_env bash '$repo_root/scripts/$runner' 1gpu"
         else
             echo "$(date -Is) monitoring active tmux session $session"
         fi
@@ -47,11 +54,10 @@ run_eval() {
 }
 
 wait_for_final_checkpoint \
-    mean_teacher_full run_mean_teacher_coco10.sh \
-    "$run_root/mean_teacher_coco10_1gpu/iter_180000.pth"
+    mean_teacher_full run_mean_teacher_coco10.sh "$mt_run_dir" "$mt_resume_from"
 run_eval mean_teacher \
     "$repo_root/configs/reproduction/mean_teacher_r50_fpn_coco_180k_10p_1gpu.py" \
-    "$run_root/mean_teacher_coco10_1gpu/iter_180000.pth"
+    "$mt_run_dir/iter_180000.pth"
 baseline_ap="$(python - "$run_root" <<'PY'
 import glob
 import json
@@ -78,10 +84,9 @@ else
 fi
 
 wait_for_final_checkpoint \
-    consistent_teacher_full run_consistent_teacher_coco10.sh \
-    "$run_root/consistent_teacher_coco10_1gpu/iter_180000.pth"
+    consistent_teacher_full run_consistent_teacher_coco10.sh "$ct_run_dir" "$ct_resume_from"
 run_eval consistent_teacher \
     "$repo_root/configs/reproduction/consistent_teacher_r50_fpn_coco_180k_10p_1gpu.py" \
-    "$run_root/consistent_teacher_coco10_1gpu/iter_180000.pth"
+    "$ct_run_dir/iter_180000.pth"
 
 echo "$(date -Is) Mean-Teacher and Consistent-Teacher training/evaluation sequence completed"

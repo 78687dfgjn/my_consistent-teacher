@@ -31,4 +31,7 @@ runner = dict(type="IterBasedRunner", max_iters=180000)
 # paper comparison still uses the final 180k checkpoint.
 evaluation = dict(save_best="bbox_mAP", rule="greater")
 fp16 = None
+# Keep the same bounded retention policy as the author's CT config; best
+# validation checkpoints are stored separately by EvalHook.
+checkpoint_config = dict(interval=4000, max_keep_ckpts=2)
 log_config = dict(interval=50, hooks=[dict(type="TextLoggerHook", by_epoch=False)])

@@ -27,12 +27,12 @@ case "$mode" in
     if [[ "$gpus" != 8 ]]; then echo "Paper config requires 8 GPUs (requested $gpus)" >&2; exit 2; fi
     available_gpus="$(nvidia-smi -L | wc -l)"
     if [[ "$available_gpus" -lt 8 ]]; then echo "Paper config needs 8 visible GPUs; found $available_gpus" >&2; exit 2; fi
-    run_dir="$run_root/consistent_teacher_coco10_paper_8gpu"
+    run_dir="${CT_RUN_DIR:-$run_root/consistent_teacher_coco10_paper_8gpu}"
     ;;
   1gpu)
     config="configs/reproduction/consistent_teacher_r50_fpn_coco_180k_10p_1gpu.py"
     gpus=1
-    run_dir="$run_root/consistent_teacher_coco10_1gpu"
+    run_dir="${CT_RUN_DIR:-$run_root/consistent_teacher_coco10_1gpu}"
     ;;
   *) echo "Usage: $0 [paper|1gpu]" >&2; exit 2 ;;
 esac
@@ -46,7 +46,12 @@ df -h "$run_root"
 printf '%s\n' "$$" > "$log_file.pid"
 
 resume_args=()
-if [[ -f "$run_dir/latest.pth" ]]; then resume_args=(--resume-from "$run_dir/latest.pth"); fi
+if [[ -n "${CT_RESUME_FROM:-}" ]]; then
+  if [[ ! -f "$CT_RESUME_FROM" ]]; then echo "Resume checkpoint not found: $CT_RESUME_FROM" >&2; exit 2; fi
+  resume_args=(--resume-from "$CT_RESUME_FROM")
+elif [[ -f "$run_dir/latest.pth" ]]; then
+  resume_args=(--resume-from "$run_dir/latest.pth")
+fi
 cd "$repo_root"
 if [[ "$mode" == paper ]]; then
   bash tools/dist_train.sh "$config" "$gpus" --work-dir "$run_dir" --seed 1 "${resume_args[@]}"
