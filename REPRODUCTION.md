@@ -203,6 +203,13 @@ The single-GPU setup must only be reported with its actual GPU count, batch,
 precision, learning rate, iterations, and deviations. Do not compare it as an
 exact eight-GPU reproduction.
 
+On the verified one-RTX-2080-Ti host, the Mean-Teacher run is currently
+scheduled first, followed by evaluation and the full Consistent-Teacher run.
+The observed early Mean-Teacher throughput was about 0.71 seconds per
+iteration, so the 180,000-step run takes roughly 37 hours before validation
+overhead. Both jobs write periodic checkpoints and append logs under
+`/hy-tmp/consistent-teacher/`.
+
 ## Evaluation
 
 Evaluate the final teacher model using the matching reproduction config:
