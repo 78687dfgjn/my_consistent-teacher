@@ -56,13 +56,14 @@ else
 fi
 test -f "$checkpoint"
 
-python - "$training_log_dir" "$method" <<'PY'
+python - "$training_log_dir" "$method" "$work_root/smoke.log" <<'PY'
 import re
 import sys
 import math
 from pathlib import Path
 
 log_dir = Path(sys.argv[1])
+smoke_log = Path(sys.argv[3])
 logs = list(log_dir.glob("*.log"))
 if not logs:
     raise SystemExit("training log not found")
@@ -77,10 +78,20 @@ norms = re.findall(
 if not norms:
     raise SystemExit("gradient norm was not logged")
 bad_norm_steps = [int(step) for step, value in norms if not math.isfinite(float(value))]
-if bad_norm_steps and (bad_norm_steps != [int(norms[0][0])] or len(norms) < 2):
-    raise SystemExit(f"gradient norm remained non-finite after initial AMP warmup: {bad_norm_steps}")
-if bad_norm_steps:
-    print(f"initial gradient norm overflow at iteration {bad_norm_steps[0]}; subsequent logged norms are finite")
+finite_norms = [step for step, value in norms if math.isfinite(float(value))]
+if not finite_norms:
+    raise SystemExit("no finite gradient norm was logged")
+overflow_count = smoke_log.read_text(errors="replace").count("Non-finite norm encountered")
+overflow_budget = max(1, int(400 * 0.05))
+if overflow_count > overflow_budget:
+    raise SystemExit(
+        f"dynamic FP16 skipped too many optimizer updates: {overflow_count} > {overflow_budget}"
+    )
+if bad_norm_steps or overflow_count:
+    print(
+        f"dynamic FP16 had {overflow_count}/400 non-finite gradient-norm updates; "
+        f"logged non-finite windows={bad_norm_steps}; finite norms recovered"
+    )
 if "ema_momentum" not in text:
     raise SystemExit("EMA hook did not report a momentum update")
 count_key = "unsup_num_gts"

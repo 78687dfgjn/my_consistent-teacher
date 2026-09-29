@@ -10,7 +10,7 @@ _base_ = ["./consistent_teacher_r50_fpn_coco_180k_10p_paper.py"]
 
 data = dict(samples_per_gpu=5, workers_per_gpu=2)
 optimizer = dict(lr=0.00125)
-fp16 = dict(_delete_=True, loss_scale="dynamic")
+fp16 = dict(_delete_=True, loss_scale=dict(init_scale=512.0))
 evaluation = dict(
     _delete_=True,
     type="EvalHook",

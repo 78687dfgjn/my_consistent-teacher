@@ -154,9 +154,12 @@ scripts/smoke_test.sh mean_teacher
 scripts/smoke_test.sh consistent_teacher
 ```
 
-Each smoke run performs 400 optimization iterations, checks finite logged
-losses/gradients, EMA logging, positive pseudo-box counts, checkpoint writing,
-resume for one iteration, and a `val2017` bbox evaluation. The
+Each smoke run performs 400 optimization iterations and checks finite logged
+losses, recovered finite gradients, finite checkpoint tensors, EMA logging,
+positive pseudo-box counts, checkpoint writing, resume for one iteration,
+and a `val2017` bbox evaluation. For the hardware-adapted dynamic FP16 runs,
+the checker permits at most 5% scaler-detected skipped updates and records the
+count; the eight-GPU paper configs are not changed. The
 Consistent-Teacher smoke also counts live calls to FAM3DHead, the dynamic
 assigner, and GMM policy, and requires at least two distinct `gmm_thr` values
 before its full run.

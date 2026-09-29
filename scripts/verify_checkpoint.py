@@ -30,6 +30,15 @@ def main():
 
     checkpoint = torch.load(args.checkpoint, map_location="cpu")
     state = checkpoint.get("state_dict", checkpoint)
+    nonfinite = [
+        name
+        for name, value in state.items()
+        if torch.is_tensor(value)
+        and (value.is_floating_point() or value.is_complex())
+        and not torch.isfinite(value).all()
+    ]
+    if nonfinite:
+        raise SystemExit(f"checkpoint contains non-finite tensors: {nonfinite[:5]}")
     differing = []
     for name, student_value in state.items():
         if name.startswith("student."):

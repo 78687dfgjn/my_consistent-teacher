@@ -14,6 +14,6 @@ finishes and its final teacher checkpoint is evaluated on COCO `val2017`.
 |---|---|---|
 | Preliminary Mean-Teacher (invalid) | Interrupted at ~1,900 iterations | Wrong teacher/student augmentation mapping and probabilistic per-batch sampler; no checkpoint. Excluded above. |
 | Mean-Teacher hardware smoke | Passed (400 iterations) | Finite losses; positive pseudo boxes logged; EMA momentum hook active; teacher/student checkpoint tensors are separate and differ; 401st-step resume saved; val2017 prediction cache evaluated. The smoke checkpoint's AP is 0.0001 and is not a reproduction result. |
-| Consistent-Teacher hardware smoke | Not yet run | Must verify ASA, FAM-3D, changing GMM thresholds, checkpoint resume, and evaluation before full training. |
+| Consistent-Teacher hardware smoke (initial scale 65,536) | Algorithm path verified; stability gate failed | FAM3D.forward=1,200, DynamicSoftLabelAssigner.assign=2,000, GMM.policy=484; logged losses were finite and GMM thresholds changed, but 8/400 dynamic-FP16 gradient-norm overflows exceeded the initial gate. Scale reached 256 and all checkpoint tensors were finite. Repeating with initial scale 512 before full training. |
 | Mean-Teacher full run | Not yet run | Requires passing smoke tests. |
 | Consistent-Teacher full run | Not yet run | Requires passing smoke tests including GMM threshold changes. |
