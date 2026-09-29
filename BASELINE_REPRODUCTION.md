@@ -4,10 +4,10 @@ This reproduces the paper's Mean-Teacher baseline using the upstream
 `configs/baseline/mean_teacher_retinanet_r50_fpn_coco_180k_10p.py` model.
 The paper reports 35.5 COCO val2017 AP for the eight-GPU reference run.
 The included single-GPU configuration is an adaptation for a 22 GB GPU:
-two images per step (one labeled, one unlabeled), learning rate 0.0005,
+five images per step (one labeled, four unlabeled), learning rate 0.00125,
 FP16 training, and the paper's fixed pseudo-label threshold of 0.4.
-The changed global batch means its final AP is not directly comparable
-with the paper's eight-GPU result.
+The global batch is eight times smaller than the paper's eight-GPU run,
+so its final AP is not directly comparable with the reported result.
 
 ## Dataset and storage
 
@@ -52,5 +52,5 @@ bash tools/run_mean_teacher_coco10_1gpu.sh
 ```
 
 The launcher checks the extracted dataset and writes training logs and
-checkpoints to `/hy-tmp/consistent-teacher/runs/mean_teacher_coco10_1gpu`.
+checkpoints to `/hy-tmp/consistent-teacher/runs/mean_teacher_coco10_1gpu_1to4`.
 The original config remains available for an eight-GPU reference run.

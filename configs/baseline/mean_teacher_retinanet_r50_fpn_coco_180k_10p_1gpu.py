@@ -2,17 +2,17 @@
 
 The original eight-GPU configuration remains the reference for published AP.
 This configuration keeps the model, data split, schedule and EMA settings,
-while using a smaller physical batch and a proportionally scaled learning rate.
+while using one GPU and a proportionally scaled learning rate.
 """
 
 _base_ = ["./mean_teacher_retinanet_r50_fpn_coco_180k_10p.py"]
 
 data = dict(
-    samples_per_gpu=2,
+    samples_per_gpu=5,
     workers_per_gpu=2,
-    sampler=dict(train=dict(sample_ratio=[1, 1])),
+    sampler=dict(train=dict(sample_ratio=[1, 4])),
 )
-optimizer = dict(lr=0.0005)
+optimizer = dict(lr=0.00125)
 semi_wrapper = dict(train_cfg=dict(
     pseudo_label_initial_score_thr=0.4,
     cls_pseudo_threshold=0.4,

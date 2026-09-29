@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 workspace_root="$(cd "$repo_root/.." && pwd)"
 data_root="${CT_DATA_ROOT:-$workspace_root/data}"
-work_dir="${CT_WORK_DIR:-$workspace_root/runs/mean_teacher_coco10_1gpu}"
+work_dir="${CT_WORK_DIR:-$workspace_root/runs/mean_teacher_coco10_1gpu_1to4}"
 
 export PYTHONPATH="$workspace_root/mmdetection:$repo_root${PYTHONPATH:+:$PYTHONPATH}"
 export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}"
